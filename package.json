@@ -1,0 +1,23 @@
+{
+  "name": "battleship",
+  "version": "1.0.0",
+  "description": "Implementation of the famous game battleship with the use of Test Driven Development TDD",
+  "main": "battleship.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DiegoSamayoaGomez/Battleship.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DiegoSamayoaGomez/Battleship/issues"
+  },
+  "homepage": "https://github.com/DiegoSamayoaGomez/Battleship#readme",
+  "devDependencies": {
+    "jest": "^30.0.5"
+  }
+}
