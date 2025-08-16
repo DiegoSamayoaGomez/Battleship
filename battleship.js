@@ -112,15 +112,25 @@ function Gameboard() {
     if (cell.ship) {
       cell.ship.hit();
       cell.display = "O"; // Mark hit ship with "O"
-      return cell.ship.isSunk() ? "Hit and sunk!" : "Hit!";
+      // Check each time a ship has been hit if all of them has been sunk
+      // If a ship has been sunk
+      // Check if all of them are sunk
+
+      // Otherwise mark them as hit
+      return cell.ship.isSunk() ? areAllShipsSunk() : "Hit!";
     } else {
       cell.display = "X"; // Optional: mark miss with "X"
       return "Miss!";
     }
   };
 
+  const areAllShipsSunk = () => {
+    return ships.every((ship) => ship.isSunk()) ? "All ships sunk" : false;
+  };
+
   // Retrieve the current gameboard
   const getBoard = () => board;
+  // Retrieve all existing ships
   const getShips = () => ships;
 
   return { getBoard, placeShip, receiveAttack, getShips };
