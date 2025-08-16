@@ -37,7 +37,16 @@ function Gameboard() {
   // Retrieve the current gameboard
   const getBoard = () => board;
 
-  return { getBoard };
+  // Place the ship in the board
+  const applyShip = (row, col, size) => {
+    for (let i = 0; i < size; i++) {
+      const r = row + 3;
+      const c = col + 3;
+      board[r][c] = "S"; // S for Ship
+    }
+  };
+
+  return { getBoard, applyShip };
 }
 
 // This functions should be passed to a test
@@ -53,4 +62,5 @@ console.log(ship.isSunk()); // true
 //module.exports = { Ship };
 
 const game = Gameboard();
+game.applyShip(5, 5, 3);
 console.table(game.getBoard());
