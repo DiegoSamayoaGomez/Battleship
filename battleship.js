@@ -133,9 +133,23 @@ function Gameboard() {
   // Retrieve all existing ships
   const getShips = () => ships;
 
+  // Gameboard
   return { getBoard, placeShip, receiveAttack, getShips };
 }
 
+function Player(isComputer = false) {
+  let instanceofGameboard = Gameboard();
+  //populateBoardWithShips(instanceofGameboard);
+
+  return {
+    getBoard: instanceofGameboard.getBoard,
+    placeShip: instanceofGameboard.placeShip,
+    receiveAttack: instanceofGameboard.receiveAttack,
+    getShips: instanceofGameboard.getShips,
+  };
+}
+
+// HELPER
 function printDisplayBoard(board) {
   const display = board.map((row) =>
     row.map((cell) => {
@@ -148,15 +162,43 @@ function printDisplayBoard(board) {
 
   display.forEach((row) => console.log(row));
 }
-//module.exports = { Ship };
 
-const game = Gameboard();
-//game.placeShip(5, 3, 4);
-//game.placeShip(2, 5, 4);
-//game.placeShip(0, 9, 4);
-game.placeShip(3, 3, 2);
+// HELPER
+function populateBoardWithShips(gameboard) {
+  const shipsToPlace = [
+    { name: "Carrier", size: 5 },
+    { name: "Battleship", size: 4 },
+    { name: "Destroyer", size: 3 },
+    { name: "Submarine", size: 3 },
+    { name: "Patrol Boat", size: 2 },
+  ];
 
-console.log(game.receiveAttack(3, 3)); // => "Hit!"
-console.log(game.receiveAttack(2, 3)); // => "Miss!" (unless ship was placed to the right)
-console.log("--->", game.getShips());
-printDisplayBoard(game.getBoard());
+  for (const ship of shipsToPlace) {
+    let placed = false;
+
+    while (!placed) {
+      const row = Math.floor(Math.random() * 10);
+      const col = Math.floor(Math.random() * 10);
+      placed = gameboard.placeShip(row, col, ship.size);
+    }
+  }
+}
+
+const playerOne = Player();
+playerOne.placeShip(2, 3, 1);
+console.log(playerOne.receiveAttack(2, 3));
+console.log(printDisplayBoard(playerOne.getBoard()));
+
+const Two = Player();
+Two.placeShip(3, 3, 1);
+console.log(Two.receiveAttack(3, 3));
+console.log(printDisplayBoard(Two.getBoard()));
+/* 
+const instance = Gameboard();
+//populateBoardWithShips(instance);
+instance.placeShip(2, 3, 1);
+instance.receiveAttack(2, 3);
+
+console.log(printDisplayBoard(instance.getBoard()));
+
+*/
