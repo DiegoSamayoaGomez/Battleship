@@ -101,31 +101,29 @@ function Gameboard() {
 
     return false; // No valid placement
   };
-
   const receiveAttack = (row, col) => {
     const cell = board[row][col];
 
-    if (cell.hit) return "Already hit";
+    if (cell.hit) return { status: "Already hit" };
 
     cell.hit = true;
 
     if (cell.ship) {
       cell.ship.hit();
-      cell.display = "O"; // Mark hit ship with "O"
-      // Check each time a ship has been hit if all of them has been sunk
-      // If a ship has been sunk
-      // Check if all of them are sunk
+      const shipSunk = cell.ship.isSunk();
+      const allSunk = areAllShipsSunk();
 
-      // Otherwise mark them as hit
-      return cell.ship.isSunk() ? areAllShipsSunk() : "Hit!";
+      return {
+        status: "Hit",
+        shipSunk,
+        allShipsSunk: allSunk,
+      };
     } else {
-      cell.display = "X"; // Optional: mark miss with "X"
-      return "Miss!";
+      return { status: "Miss" };
     }
   };
-
   const areAllShipsSunk = () => {
-    return ships.every((ship) => ship.isSunk()) ? "All ships sunk" : false;
+    return ships.every((ship) => ship.isSunk());
   };
 
   // Retrieve the current gameboard
@@ -134,19 +132,63 @@ function Gameboard() {
   const getShips = () => ships;
 
   // Gameboard
-  return { getBoard, placeShip, receiveAttack, getShips };
+  return { getBoard, placeShip, receiveAttack, getShips, areAllShipsSunk };
 }
 
-function Player(isComputer = false) {
-  let instanceofGameboard = Gameboard();
-  //populateBoardWithShips(instanceofGameboard);
+function Player(name = "Player", isComputer = false) {
+  const gameboard = Gameboard();
+
+  const attack = (opponent, row, col) => {
+    return opponent.getGameboard().receiveAttack(row, col);
+  };
+
+  const getGameboard = () => gameboard;
 
   return {
-    getBoard: instanceofGameboard.getBoard,
-    placeShip: instanceofGameboard.placeShip,
-    receiveAttack: instanceofGameboard.receiveAttack,
-    getShips: instanceofGameboard.getShips,
+    name,
+    isComputer,
+    attack,
+    getGameboard,
   };
+}
+
+function playGame(user, computer) {
+  let activePlayer = user;
+  let opponent = computer;
+
+  while (true) {
+    console.log(`\n${activePlayer.name}'s turn:`);
+
+    let row, col;
+
+    if (activePlayer.isComputer) {
+      // Random attack
+      row = Math.floor(Math.random() * 10);
+      col = Math.floor(Math.random() * 10);
+    } else {
+      // User input — Later will be replaced with UI
+      row = parseInt(prompt("Enter row (0–9): "));
+      col = parseInt(prompt("Enter col (0–9): "));
+    }
+
+    const result = activePlayer.attack(opponent, row, col);
+
+    console.log(`Attack on (${row}, ${col}): ${result.status}`);
+    if (result.status === "Hit" && result.shipSunk) {
+      console.log("You sunk a ship!");
+    }
+
+    console.log(`\n${opponent.name}'s board:`);
+    printDisplayBoard(opponent.getGameboard().getBoard());
+
+    if (result.allShipsSunk) {
+      console.log(`\n ${activePlayer.name} wins! All opponent ships sunk.`);
+      break;
+    }
+
+    // Switch turns
+    [activePlayer, opponent] = [opponent, activePlayer];
+  }
 }
 
 // HELPER
@@ -183,7 +225,7 @@ function populateBoardWithShips(gameboard) {
     }
   }
 }
-
+/* 
 const playerOne = Player();
 playerOne.placeShip(2, 3, 1);
 console.log(playerOne.receiveAttack(2, 3));
@@ -193,7 +235,7 @@ const Two = Player();
 Two.placeShip(3, 3, 1);
 console.log(Two.receiveAttack(3, 3));
 console.log(printDisplayBoard(Two.getBoard()));
-/* 
+
 const instance = Gameboard();
 //populateBoardWithShips(instance);
 instance.placeShip(2, 3, 1);
@@ -202,3 +244,12 @@ instance.receiveAttack(2, 3);
 console.log(printDisplayBoard(instance.getBoard()));
 
 */
+const computerPlayer = Player("Computer", true);
+const userPlayer = Player("User", false);
+
+// Populate both boards
+populateBoardWithShips(computerPlayer.getGameboard());
+populateBoardWithShips(userPlayer.getGameboard());
+
+// Start the game
+// playGame(userPlayer, computerPlayer);
