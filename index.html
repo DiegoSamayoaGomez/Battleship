@@ -4,8 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <script type="module" src="battleship.js"></script>
+    <title>Battleship</title>
+    <script type="module" src="battleship.js" defer></script>
+
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="modern-normalize.css">
 </head>
@@ -17,30 +18,38 @@
     </div>
 
     <div class="winnerDiv">
-        uwu
+
     </div>
 
     <div class="mainContainer">
         <div class="turn">
             <h2 class="turnPlayer"></h2>
         </div>
-        <div class="board">
 
-            <div class="board1">
-                user
+        <div class="statusShip"></div>
+
+        <div class="board">
+            <div class="boardUser">
+
+                <div class="titleUser">User</div>
+                <div class="userBoard">
+                </div>
             </div>
-            <div class="board2">
-                pc
+
+            <div class="boardComputer">
+                <div class="titleComputer">Computer</div>
+                <div class="computerBoard">
+
+                </div>
             </div>
+
         </div>
-        <div class="options">
-            <button class="resetBtn">RESET GAME</button>
-        </div>
+
     </div>
 
     <div class="footer">
         <p class="footerContainer">
-            Diego Samayoa <a href="https://github.com/DiegoSamayoaGomez">Check my github!</a>
+            <a href="https://github.com/DiegoSamayoaGomez">Check my github!</a>
         </p>
     </div>
 </body>
