@@ -101,6 +101,7 @@ function Gameboard() {
 
     return false; // No valid placement
   };
+
   const receiveAttack = (row, col) => {
     const cell = board[row][col];
 
@@ -152,57 +153,201 @@ function Player(name = "Player", isComputer = false) {
   };
 }
 
-function playGame(user, computer) {
-  let activePlayer = user;
-  let opponent = computer;
+function playGame(userObj, computerObj) {
+  let activePlayer = userObj;
+  let opponent = computerObj;
 
-  while (true) {
-    console.log(`\n${activePlayer.name}'s turn:`);
+  const switchPlayerTurn = () => {
+    [activePlayer, opponent] = [opponent, activePlayer];
+  };
 
-    let row, col;
+  const getCurrentPlayer = () => activePlayer;
+  const getOpponent = () => opponent;
 
+  const playRound = (row, col) => {
+    // If it's the computer's turn, generate random coordinates
     if (activePlayer.isComputer) {
-      // Random attack
       row = Math.floor(Math.random() * 10);
       col = Math.floor(Math.random() * 10);
-    } else {
-      // User input — Later will be replaced with UI
-      row = parseInt(prompt("Enter row (0–9): "));
-      col = parseInt(prompt("Enter col (0–9): "));
     }
 
     const result = activePlayer.attack(opponent, row, col);
 
-    console.log(`Attack on (${row}, ${col}): ${result.status}`);
-    if (result.status === "Hit" && result.shipSunk) {
-      console.log("You sunk a ship!");
+    const response = {
+      attacker: activePlayer.name,
+      row,
+      col,
+      status: result.status,
+      shipSunk: !!result.shipSunk,
+      allShipsSunk: !!result.allShipsSunk,
+      winner: result.allShipsSunk ? activePlayer.name : null,
+    };
+
+    if (!result.allShipsSunk) {
+      switchPlayerTurn();
     }
 
-    console.log(`\n${opponent.name}'s board:`);
-    printDisplayBoard(opponent.getGameboard().getBoard());
+    return response;
+  };
 
-    if (result.allShipsSunk) {
-      console.log(`\n ${activePlayer.name} wins! All opponent ships sunk.`);
-      break;
+  return {
+    playRound,
+    getCurrentPlayer,
+    getOpponent,
+  };
+}
+
+function displayController() {
+  // Convert HTML into DOM elements
+  const winnerDiv = document.querySelector(".winnerDiv");
+  const announceWinner = document.createElement("h1");
+  announceWinner.classList = "announceWinner";
+
+  const turnPlayer = document.querySelector(".turnPlayer");
+  const userBoard = document.querySelector(".userBoard");
+  const computerBoard = document.querySelector(".computerBoard");
+
+  const shipStatus = document.querySelector(".shipDestroyed");
+
+  // Start the game
+  // playGame(userPlayer, computerPlayer);
+
+  const userPlayer = Player("User", false);
+  const computerPlayer = Player("Computer", true);
+
+  // Populate both boards
+  populateBoardWithShips(computerPlayer.getGameboard());
+  populateBoardWithShips(userPlayer.getGameboard());
+
+  // Show boards in console at the start
+  logBoards(userPlayer, computerPlayer);
+
+  // Start the game
+  const game = playGame(userPlayer, computerPlayer);
+
+  let gameOver = false;
+  function updateScreen() {
+    // Clear both boards
+    userBoard.textContent = "";
+    computerBoard.textContent = "";
+
+    // Get updated board states
+    const userDisplay = printDisplayBoard(
+      userPlayer.getGameboard().getBoard(),
+      false
+    );
+    const computerDisplay = printDisplayBoard(
+      computerPlayer.getGameboard().getBoard(),
+      true
+    );
+
+    // Show current turn
+    const activePlayer = game.getCurrentPlayer();
+    turnPlayer.textContent = `It's ${activePlayer.name}'s turn`;
+
+    // Render user board
+    userDisplay.forEach((row, rowIndex) => {
+      row.forEach((cellValue, colIndex) => {
+        const btn = document.createElement("button");
+        btn.classList = "grid";
+        btn.textContent = cellValue;
+        if (cellValue === ".") {
+          btn.style.backgroundColor = "white";
+          btn.style.color = "white";
+        } else if (cellValue === "O") {
+          btn.style.backgroundColor = "#8BB4FF";
+          btn.style.color = "red";
+        } else if (cellValue === "X") {
+          btn.style.backgroundColor = "#CFE3FF";
+          btn.style.color = "#B2B3BD";
+        } else if (cellValue === "S") {
+          btn.style.backgroundColor = "#8BB4FF";
+          btn.style.color = "#0C162E";
+        }
+
+        userBoard.appendChild(btn);
+      });
+    });
+
+    // Render computer board with event listeners for attacks
+    computerDisplay.forEach((row, rowIndex) => {
+      row.forEach((cellValue, colIndex) => {
+        const btn = document.createElement("button");
+        btn.classList = "grid";
+        btn.textContent = cellValue;
+        btn.dataset.row = rowIndex;
+        btn.dataset.col = colIndex;
+
+        if (cellValue === ".") {
+          btn.style.backgroundColor = "white";
+          btn.style.color = "white";
+        } else if (cellValue === "O") {
+          btn.style.backgroundColor = "#8BB4FF";
+          btn.style.color = "red";
+        } else if (cellValue === "X") {
+          btn.style.backgroundColor = "#CFE3FF";
+          btn.style.color = "#B2B3BD";
+        } else if (cellValue === "S") {
+          btn.style.backgroundColor = "#8BB4FF";
+          btn.style.color = "#0C162E";
+        }
+
+        if (!gameOver && activePlayer.name === "User") {
+          btn.addEventListener("click", () => {
+            const result = game.playRound(rowIndex, colIndex);
+
+            if (result.status === "Already hit") {
+              announceWinner.textContent = `${result.attacker} wins!`;
+              return;
+            }
+
+            if (result.allShipsSunk) {
+              winnerDiv.appendChild(announceWinner);
+              announceWinner.textContent = `${result.attacker} wins!`;
+              gameOver = true;
+            }
+
+            updateScreen(); // Re-render after action
+          });
+        }
+
+        computerBoard.appendChild(btn);
+      });
+    });
+
+    // Automatically let computer play after user
+    if (!gameOver && game.getCurrentPlayer().isComputer) {
+      setTimeout(() => {
+        const result = game.playRound();
+
+        if (result.allShipsSunk) {
+          winnerDiv.appendChild(announceWinner);
+          announceWinner.textContent = `${result.attacker} wins!`;
+          gameOver = true;
+        }
+
+        updateScreen(); // Render after computer's turn
+      }, 500); // slight delay for visual clarity
     }
-
-    // Switch turns
-    [activePlayer, opponent] = [opponent, activePlayer];
   }
+
+  updateScreen();
 }
 
 // HELPER
-function printDisplayBoard(board) {
+function printDisplayBoard(board, hideShips = false) {
   const display = board.map((row) =>
     row.map((cell) => {
       if (cell.hit && cell.ship) return "O"; // Hit ship
       if (cell.hit && !cell.ship) return "X"; // Miss
-      if (!cell.hit && cell.ship) return "S"; // Unhit ship
-      return " "; // Empty cell
+      if (!cell.hit && cell.ship) return hideShips ? "." : "S"; // Unhit ship
+      return "."; // Empty cell
     })
   );
 
-  display.forEach((row) => console.log(row));
+  //display.forEach((row) => console.log(row));
+
+  return display;
 }
 
 // HELPER
@@ -225,31 +370,28 @@ function populateBoardWithShips(gameboard) {
     }
   }
 }
-/* 
-const playerOne = Player();
-playerOne.placeShip(2, 3, 1);
-console.log(playerOne.receiveAttack(2, 3));
-console.log(printDisplayBoard(playerOne.getBoard()));
 
-const Two = Player();
-Two.placeShip(3, 3, 1);
-console.log(Two.receiveAttack(3, 3));
-console.log(printDisplayBoard(Two.getBoard()));
+// HELPER
 
-const instance = Gameboard();
-//populateBoardWithShips(instance);
-instance.placeShip(2, 3, 1);
-instance.receiveAttack(2, 3);
+function logBoards(user, computer) {
+  console.log("User:");
+  printDisplayBoard(user.getGameboard().getBoard(), false).forEach((row) =>
+    console.log(row.join(" "))
+  );
 
-console.log(printDisplayBoard(instance.getBoard()));
+  console.log("\nComputer:");
+  printDisplayBoard(computer.getGameboard().getBoard(), false).forEach((row) =>
+    console.log(row.join(" "))
+  );
 
-*/
-const computerPlayer = Player("Computer", true);
-const userPlayer = Player("User", false);
+  console.log("----------");
+}
 
-// Populate both boards
-populateBoardWithShips(computerPlayer.getGameboard());
-populateBoardWithShips(userPlayer.getGameboard());
+displayController();
 
-// Start the game
-// playGame(userPlayer, computerPlayer);
+module.exports = {
+  Ship,
+  Gameboard,
+  Player,
+  playGame,
+};
